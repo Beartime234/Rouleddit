@@ -13,6 +13,10 @@ If you already have a Reddit account you can visit our subreddit [here](https://
 
 Click on How To Play to read the instructions on how to play.
 
+It's simple just place a bet on what letter which you think will be first in the random post. 
+
+You can bet on a single letter, a range of letters (A -> I) or even place more unique bets. After placing your bet A random subreddit and top post from that week for that subreddit will be chosen. If you bet correctly you win your points back with the corresponding multiplier.
+
 ## Installation
 
 The best way to play Rouleddit is on the [Rouleddit Subreddit](https://www.reddit.com/r/Rouleddit/)

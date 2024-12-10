@@ -181,7 +181,7 @@ export class Service {
     rank: number;
     score: number;
   }> {
-    const defaultValue = { rank: -1, score: 0 };
+    const defaultValue = { rank: -1, score: 100 };
     if (!username) return defaultValue;
     try {
       const [rank, score] = await Promise.all([
@@ -336,4 +336,72 @@ export class Service {
         return false;
     }
   }
+
+
+  // Daily Gift
+  #dailyGiftKey = (username: string) => `dailyGift:${username}`;
+
+  async getDailyGiftExpiration(username: string): Promise<number | null> {
+    const key = this.#dailyGiftKey(username);
+    const expiration = await this.redis.expireTime(key);
+    return expiration === -1 ? null : expiration;
+  }
+
+  async giveDailyGift(username: string): Promise<number> {
+    if (await this.hasClaimedTheDailyGift(username)) {
+      throw new Error('User has already claimed the daily gift');
+    }
+    const giftAmount = this.getDailyGiftAmount();
+    await this.addToUserScore(username, giftAmount);
+    await this.claimDailyGift(username);
+    return giftAmount
+  }
+
+  async resetDailyGift(username: string): Promise<void> {
+    const key = this.#dailyGiftKey(username);
+    await this.redis.del(key);
+  }
+
+  private async hasClaimedTheDailyGift(username: string): Promise<boolean> {
+    const key = this.#dailyGiftKey(username);
+    const value = await this.redis.get(key);
+    const expiration = await this.redis.expireTime(key);
+    console.log('Daily Gift:', value, 'expires in', expiration, 'seconds');
+    return value !== undefined;
+  }
+
+  private async claimDailyGift(username: string): Promise<void> {
+    const key = this.#dailyGiftKey(username);
+    await this.redis.set(key, 'claimed')
+    await this.redis.expire(key, this.getGiftExpirationTime());
+  }
+
+  private getDailyGiftAmount(): number {
+    return Math.floor(
+      Math.random() * (Settings.game.dailyGift.max - Settings.game.dailyGift.min + 1) +
+        Settings.game.dailyGift.min
+    );
+  }
+
+  private getGiftExpirationTime(): number {
+    const secondsUntilMidday = this.getSecondsUntilMidday();
+    console.log('Daily Gift expires in', secondsUntilMidday, 'seconds');
+    return secondsUntilMidday;
+  }
+
+  private getSecondsUntilMidday(): number {
+    const now = new Date();
+    const laTime = new Date(now.toLocaleString('en-US', { timeZone: Settings.game.dailyGift.timezone }));
+    let midday = new Date(laTime);
+    midday.setHours(12, 0, 0, 0);
+    
+    if (laTime > midday) {
+      midday.setDate(midday.getDate() + 1);
+    }
+  
+    return Math.floor((midday.getTime() - laTime.getTime()) / 1000);
+  }
 }
+
+
+

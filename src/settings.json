@@ -18,7 +18,11 @@
     "title": "Rouleddit!"
   },
   "game": {
-    "timezone": "America/New_York",
+    "dailyGift": {
+        "max": 1000,
+        "min": 100,
+        "timezone": "America/New_York"
+    },
     "searchTopPostsLimit": 50,
     "searchSubreddits": [
         "AskReddit",

@@ -186,6 +186,18 @@ Devvit.addMenuItem({
 });
 
 Devvit.addMenuItem({
+  label: '[Test] Reset Player Gift',
+  location: 'subreddit',
+  forUserType: 'moderator',
+  onPress: async (_event, context) => {
+    const service = new Service(context);
+    const user = await context.reddit.getCurrentUser();
+    await service.resetDailyGift(user!.username);
+    context.ui.showToast('Reset player gift');
+  }
+});
+
+Devvit.addMenuItem({
   label: '[Test] Show Scheduled Jobs',
   location: 'subreddit',
   forUserType: 'moderator',

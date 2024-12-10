@@ -18,6 +18,7 @@ interface SpinWheelProps {
 }
 
 const letters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ_';
+const oddsToShowGreen = 0.05;
 
 
 export const SpinWheelStep = (
@@ -61,7 +62,6 @@ export const SpinWheelStep = (
         revealPostInterval.start();
         setRevealWinningPost(true);
         setCurrentRevealedSubreddit(subreddit);
-        props.setUserScore(props.userScore + (isWin ? props.payoutData.payoutAmount : 0));
         setFinishedRevealingSubreddit(true);
       }
     }
@@ -74,9 +74,9 @@ export const SpinWheelStep = (
 
   const revealPostInterval = useInterval(() => {
     if (questionMarkColor === 'black') {
-      setQuestionMarkColor(Math.random() < 0.01 ? 'green' : 'red');
+      setQuestionMarkColor(Math.random() < oddsToShowGreen ? 'green' : 'red');
     } else if (questionMarkColor === 'red') {
-      setQuestionMarkColor(Math.random() < 0.01 ? 'green' : 'black');
+      setQuestionMarkColor(Math.random() < oddsToShowGreen ? 'green' : 'black');
     } else {
       setQuestionMarkColor('black');
     }
@@ -85,6 +85,7 @@ export const SpinWheelStep = (
       console.log('Stopping interval Post');
       revealPostInterval.stop();
       setFinishedRevealingPost(true);
+      props.setUserScore(props.userScore + (isWin ? props.payoutData.payoutAmount : 0));
     }
   }, 250);
 

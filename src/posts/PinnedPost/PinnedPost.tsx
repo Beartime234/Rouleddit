@@ -8,6 +8,7 @@ import { PlaceBetStep } from '../../components/Pages/PlaceBetStep.js';
 import type { PostData } from '../../types/PostData.js';
 import { UserData } from '../../types/UserData.js';
 import { AppHeader } from '../../components/AppHeader.js';
+import { convertSecondsToTimeRemaining } from '../../utils/time.js';
 
 const menuButtonWidth = '200px';
 const menuButtonHeight = '62px';
@@ -23,14 +24,16 @@ export const PinnedPost = (props: PinnedPostProps, context: Context): JSX.Elemen
   const service = new Service(context);
   const [page, setPage] = useState('menu');
 
-  const { data: user, loading } = useAsync<{
-    rank: number;
-    score: number;
-  }>(async () => {
-    return await service.getUserScore(props.username);
+  const { data, loading } = useAsync(async () => {
+    const userScore = await service.getUserScore(props.username);
+    const dailyGiftExpiration = await service.getDailyGiftExpiration(props.username!);
+    return { userScore, dailyGiftExpiration };
   });
 
-  if (user === null || loading) {
+  const user = data?.userScore;
+  const dailyGift = data?.dailyGiftExpiration;
+
+  if (user === null || dailyGift === null || loading) {
     return <LoadingState />;
   }
 
@@ -118,6 +121,24 @@ export const PinnedPost = (props: PinnedPostProps, context: Context): JSX.Elemen
           label="Leaderboard"
         />
       </vstack>
+      <spacer height="16px" />
+      <hstack alignment='middle end'>
+      {dailyGift ? (
+      <text color='black'>{`Gift Available: ${convertSecondsToTimeRemaining(dailyGift)}`}</text>
+      ) : (
+        <StyledButton
+          width="100px"
+          height="32px"
+          appearance="score"
+          label="Daily Gift"
+          onPress={async () => {
+            const giftAmount = await service.giveDailyGift(props.username!);
+            context.ui.showToast(`You got ${giftAmount}$`)
+            setScore(score + giftAmount);
+          }}
+        />
+      )}
+      </hstack>
     </vstack>
     </>
   );
