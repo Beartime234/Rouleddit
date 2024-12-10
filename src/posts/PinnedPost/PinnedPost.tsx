@@ -1,4 +1,4 @@
-import { Context, Devvit, useAsync, useState } from '@devvit/public-api';
+import { Context, Devvit, useAsync, useInterval, useState } from '@devvit/public-api';
 import { LoadingState } from '../../components/LoadingState.js';
 import { StyledButton } from '../../components/StyledButton.js';
 import { Service } from '../../service/Service.js';
@@ -8,7 +8,9 @@ import { PlaceBetStep } from '../../components/Pages/PlaceBetStep.js';
 import type { PostData } from '../../types/PostData.js';
 import { UserData } from '../../types/UserData.js';
 import { AppHeader } from '../../components/AppHeader.js';
-import { convertSecondsToTimeRemaining } from '../../utils/time.js';
+import { convertSecondsToTimeRemaining, getSecondsUntilMidday } from '../../utils/time.js';
+import { StyledText } from '../../components/StyledText.js';
+import { Shadow } from '../../components/Shadow.js';
 
 const menuButtonWidth = '200px';
 const menuButtonHeight = '62px';
@@ -38,6 +40,17 @@ export const PinnedPost = (props: PinnedPostProps, context: Context): JSX.Elemen
   }
 
   const [score, setScore] = useState<number>(props.userData.score);
+  const [dailyGiftExpiration, setDailyGiftExpiration] = useState<number>(dailyGift ?? getSecondsUntilMidday());
+
+  const dailyGiftCoundown = useInterval(() => {
+    if (dailyGiftExpiration <= 0) {
+      dailyGiftCoundown.stop();
+      return;
+    }
+    setDailyGiftExpiration((prev) => prev - 1);
+  }, 1000);
+
+  dailyGiftCoundown.start();
 
   const Menu = (
     <>
@@ -121,25 +134,31 @@ export const PinnedPost = (props: PinnedPostProps, context: Context): JSX.Elemen
           label="Leaderboard"
         />
       </vstack>
-      <spacer height="16px" />
-      <hstack alignment='middle end'>
-      {dailyGift ? (
-      <text color='black'>{`Gift Available: ${convertSecondsToTimeRemaining(dailyGift)}`}</text>
+    </vstack>
+    <hstack height='100%' width='100%' alignment='bottom start' padding='small'>
+    <spacer height='24px' width='24px'/>
+    {dailyGiftExpiration ? (
+      <Shadow height='12px' width='12px'>
+        <hstack backgroundColor='white'>
+          <StyledText>{`Next gift in ${convertSecondsToTimeRemaining(dailyGiftExpiration)}`}</StyledText>
+        </hstack>
+      </Shadow>
       ) : (
         <StyledButton
           width="100px"
           height="32px"
           appearance="score"
-          label="Daily Gift"
+          label="Redeem Daily Gift"
           onPress={async () => {
             const giftAmount = await service.giveDailyGift(props.username!);
             context.ui.showToast(`You got ${giftAmount}$`)
             setScore(score + giftAmount);
+            setDailyGiftExpiration(getSecondsUntilMidday());
+            dailyGiftCoundown.start();
           }}
         />
       )}
-      </hstack>
-    </vstack>
+    </hstack>
     </>
   );
 

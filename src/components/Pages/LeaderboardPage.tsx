@@ -42,7 +42,7 @@ const Layout = (props: { children: JSX.Element; onClose: () => void }): JSX.Elem
           <spacer height="4px" />
           <hstack grow>
             <spacer width="4px" />
-            <hstack grow backgroundColor={'green'}/>
+            <hstack grow backgroundColor={'red'}/>
           </hstack>
         </vstack>
 

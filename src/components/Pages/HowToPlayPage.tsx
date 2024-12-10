@@ -31,7 +31,7 @@ export const HowToPlayPage = (props: HowToPlayProps, _context: Context): JSX.Ele
           <spacer height="4px" />
           <hstack grow>
             <spacer width="4px" />
-            <hstack grow backgroundColor='black' />
+            <hstack grow backgroundColor='red' />
           </hstack>
         </vstack>
 

@@ -12,6 +12,7 @@ import { BetTypeMultiplier, BetType } from '../types/BetData.js';
 import Settings from '../settings.json';
 import { ScoreBoardEntry } from '../types/ScoreBoardEntry.js';
 import { FlairData, Flairs, FlairsRankingArray } from '../types/FlairData.js';
+import { getSecondsUntilMidday } from '../utils/time.js';
 
 
 const PINNED_POST_ID_KEY = 'pinned';
@@ -366,7 +367,6 @@ export class Service {
     const key = this.#dailyGiftKey(username);
     const value = await this.redis.get(key);
     const expiration = await this.redis.expireTime(key);
-    console.log('Daily Gift:', value, 'expires in', expiration, 'seconds');
     return value !== undefined;
   }
 
@@ -384,22 +384,8 @@ export class Service {
   }
 
   private getGiftExpirationTime(): number {
-    const secondsUntilMidday = this.getSecondsUntilMidday();
-    console.log('Daily Gift expires in', secondsUntilMidday, 'seconds');
+    const secondsUntilMidday = getSecondsUntilMidday();
     return secondsUntilMidday;
-  }
-
-  private getSecondsUntilMidday(): number {
-    const now = new Date();
-    const laTime = new Date(now.toLocaleString('en-US', { timeZone: Settings.game.dailyGift.timezone }));
-    let midday = new Date(laTime);
-    midday.setHours(12, 0, 0, 0);
-    
-    if (laTime > midday) {
-      midday.setDate(midday.getDate() + 1);
-    }
-  
-    return Math.floor((midday.getTime() - laTime.getTime()) / 1000);
   }
 }
 

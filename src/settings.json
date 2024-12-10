@@ -20,8 +20,7 @@
   "game": {
     "dailyGift": {
         "max": 1000,
-        "min": 100,
-        "timezone": "America/New_York"
+        "min": 100
     },
     "searchTopPostsLimit": 50,
     "searchSubreddits": [

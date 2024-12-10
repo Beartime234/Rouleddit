@@ -2,10 +2,8 @@ import { Devvit, Context, useState, useInterval, useAsync } from '@devvit/public
 import { StyledText } from '../StyledText.js';
 import { Bet, PayoutData } from '../../types/BetData.js';
 import { ChosenPostData } from '../../types/BetData.js';
-import { Service } from '../../service/Service.js';
 import { StyledButton } from '../StyledButton.js';
 import { formatScore } from '../../utils/formatNumbers.js';
-import { Shadow } from '../Shadow.js';
 
 interface SpinWheelProps {
   username?: string;
@@ -151,7 +149,6 @@ export const SpinWheelStep = (
           {finishedRevealingPost && (
             <hstack gap="small">
             <StyledButton width="100px" height="32px" appearance="back" label="Play Again" onPress={props.playAgain} />
-            <StyledButton width="100px" height="32px" appearance="black" label="Share" onPress={() => context.ui.navigateTo('bet')} />
             </hstack>
           )}
         </vstack>
