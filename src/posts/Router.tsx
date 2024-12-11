@@ -2,12 +2,14 @@ import type { Context } from '@devvit/public-api';
 import { Devvit, useAsync } from '@devvit/public-api';
 
 import { LoadingState } from '../components/LoadingState.js'
-import { PINNED_POST_TYPE, Service  } from '../service/Service.js';
+import { PINNED_POST_TYPE, DAILY_REVEAL_POST_TYPE, Service  } from '../service/Service.js';
 import type {
+  DailyResultPostData,
   PostData,
 } from '../types/PostData.js';
 import { UserData } from '../types/UserData.js';
 import { PinnedPost } from './PinnedPost/PinnedPost.js';
+import { DailyResultPost } from './DailyResultPost/DailyResultPost.js';
 
 /*
  * Page Router
@@ -25,9 +27,15 @@ export const Router: Devvit.CustomPostComponent = (context: Context) => {
   });
 
   const { data: postData, loading: postDataLoading } = useAsync<
-    PostData
+    PostData | DailyResultPostData
   >(async () => {
-    return await service.getPostData(context.postId!);
+    const postType = await service.getPostType(context.postId!);
+    switch (postType) {
+      case DAILY_REVEAL_POST_TYPE:
+        return await service.getDailyRevealPost(context.postId!);
+      default:
+        return await service.getPostData(context.postId!);
+    }
   });
 
   const { data: userData, loading: userDataLoading } = useAsync<UserData>(
@@ -56,6 +64,12 @@ export const Router: Devvit.CustomPostComponent = (context: Context) => {
       <PinnedPost
         postData={postData as PostData}
         userData={userData}
+        username={username}
+      />
+    ),
+    [DAILY_REVEAL_POST_TYPE]: (
+      <DailyResultPost
+        chosenPost={(postData as DailyResultPostData).chosenPost}
         username={username}
       />
     ),

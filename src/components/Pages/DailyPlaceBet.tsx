@@ -1,17 +1,18 @@
-import { Devvit, useForm, Context, useState } from '@devvit/public-api';
+import { Devvit, useForm, Context, useState, useAsync } from '@devvit/public-api';
+import { StyledText } from '../StyledText.js';
 import { StyledButton } from '../StyledButton.js';
 import { AppHeader } from '../AppHeader.js';
 import { Service } from '../../service/Service.js';
-import { Bet, BetType, BetTypeMultiplier } from '../../types/BetData.js';
+import { Bet, BetType, BetTypeMultiplier, DailyBet, DailyBetTypeMultiplier } from '../../types/BetData.js';
 import { UserData } from '../../types/UserData.js';
 import { SpinWheelStep } from './SpinWheelStep.js';
 import { ChosenPostData, PayoutData } from '../../types/BetData.js';
-import { LoadingState } from '../LoadingState.js';
 
-interface PlaceBetProps {
+interface DailyPlaceBetProps {
   username?: string;
   userData: UserData;
   userScore: number;
+  setHasPlacedDailyBet: (hasPlacedDailyBet: boolean) => void;
   setUserScore: (score: number) => void;
   onBack: () => void;
 }
@@ -52,20 +53,14 @@ const singleLetterButtonWidth = 280;
 const letterRangeButtonWidth = 90;
 const vowelConsonantButtonWidth = 136;
   
-export const PlaceBetStep = (
-  props: PlaceBetProps, context: Context
+export const DailyPlaceBet = (
+  props: DailyPlaceBetProps, context: Context
 ): JSX.Element => {
   const score = props.userScore;
   const setUserScore = props.setUserScore;
   const service = new Service(context)
 
   const [betType, setBetType] = useState<BetType | null>(null);
-  
-  const [betPlaced, setBetPlaced] = useState(false);
-  const [chosenPost, setChosenPost] = useState<ChosenPostData | null>(null);
-
-  const [payoutData, setPayoutData] = useState<PayoutData | null>(null);
-  const [userBet, setUserBet] = useState<Bet | null>(null);
 
   const standardGuessForm = useForm(
     {
@@ -112,45 +107,26 @@ export const PlaceBetStep = (
   );
 
   async function processBet(values: { bet: number, letter?: string }) {
-    const bet: Bet = {
+    const bet: DailyBet = {
+      username: props.username!,
       amount: values.bet,
       type: betType!,
     };
     if (values.letter && betType === BetType.SingleLetter) {
       bet.letter = values.letter;
     }
-    setUserBet(bet);
-    try {
-      const randomPost = await service.getRandomPost();
-      setChosenPost(randomPost);
-      const payoutData = await service.handleBet(bet, props.username!, randomPost.winningLetter);
-      setPayoutData(payoutData);
-    } catch (error) {
-      if (error instanceof Error) {
-        context.ui.showToast(error.message);
-      } else {
-        context.ui.showToast('An unknown error occurred');
-      }
-      return;
-    }
     setUserScore(score - values.bet);
-    setBetPlaced(true);
-  }
-
-  if (betPlaced) {
-    return (
-      <>
-      <AppHeader userScore={score}/>
-      <SpinWheelStep playAgain={() => setBetPlaced(false)} setUserScore={setUserScore} userScore={score} bet={userBet!} chosenPost={chosenPost!} payoutData={payoutData!} />
-      </>
-    );
+    await service.placeDailyBet(bet);
+    context.ui.showToast('Daily bet placed');
+    props.setHasPlacedDailyBet(true);
+    props.onBack();
   }
 
   return (
     <>
     <AppHeader userScore={score} onBack={props.onBack} />
     <vstack width="100%" height="100%" alignment="center middle">
-      <spacer height="92px" />
+      <spacer height="128px" />
       <image url="placebet_logo.png" imageWidth="200px" imageHeight="50px" description="Menu Logo"/>
       <spacer height="24px" />
       {/* Bet Buttons */}
@@ -158,31 +134,31 @@ export const PlaceBetStep = (
       <spacer width="24px" />
       <vstack gap="none" height="100%" grow alignment="center">
         <hstack gap="none">
-        <StyledButton width={`${singleLetterButtonWidth}px`} appearance="green" height="48px" label="Single Letter" microLabel={`x${BetTypeMultiplier[BetType.SingleLetter]}`} onPress={() => {
+        <StyledButton width={`${singleLetterButtonWidth}px`} appearance="green" height="48px" label="Single Letter" microLabel={`x${DailyBetTypeMultiplier[BetType.SingleLetter]}`} onPress={() => {
           setBetType(BetType.SingleLetter);
           context.ui.showForm(singleLetterGuessForm)
         }} />
         </hstack>
         <hstack gap="none">
-        <StyledButton width={`${letterRangeButtonWidth}px`} appearance="red" height="48px" label="A to I" microLabel={`x${BetTypeMultiplier[BetType.AtoI]}`} onPress={() => {
+        <StyledButton width={`${letterRangeButtonWidth}px`} appearance="red" height="48px" label="A to I" microLabel={`x${DailyBetTypeMultiplier[BetType.AtoI]}`} onPress={() => {
           setBetType(BetType.AtoI);
           context.ui.showForm(standardGuessForm)
         }} />
-        <StyledButton width={`${letterRangeButtonWidth}px`} appearance="black" height="48px" label="J to R" microLabel={`x${BetTypeMultiplier[BetType.JtoR]}`}  onPress={() => {
+        <StyledButton width={`${letterRangeButtonWidth}px`} appearance="black" height="48px" label="J to R" microLabel={`x${DailyBetTypeMultiplier[BetType.JtoR]}`}  onPress={() => {
           setBetType(BetType.JtoR);
           context.ui.showForm(standardGuessForm)
         }} />
-        <StyledButton width={`${letterRangeButtonWidth}px`} appearance="red" height="48px" label="S to Z" microLabel={`x${BetTypeMultiplier[BetType.StoZ]}`}  onPress={() => {
+        <StyledButton width={`${letterRangeButtonWidth}px`} appearance="red" height="48px" label="S to Z" microLabel={`x${DailyBetTypeMultiplier[BetType.StoZ]}`}  onPress={() => {
           setBetType(BetType.StoZ);
           context.ui.showForm(standardGuessForm)
         }} />
         </hstack>
         <hstack gap="none">
-        <StyledButton width={`${vowelConsonantButtonWidth}px`} appearance="black" height="48px" label="Vowel" microLabel={`x${BetTypeMultiplier[BetType.Vowel]}`}  onPress={() => {
+        <StyledButton width={`${vowelConsonantButtonWidth}px`} appearance="black" height="48px" label="Vowel" microLabel={`x${DailyBetTypeMultiplier[BetType.Vowel]}`}  onPress={() => {
           setBetType(BetType.Vowel);
           context.ui.showForm(standardGuessForm)
         }} />
-        <StyledButton width={`${vowelConsonantButtonWidth}px`} appearance="black" height="48px" label="Consonant" microLabel={`x${BetTypeMultiplier[BetType.Consonant]}`} onPress={() => {
+        <StyledButton width={`${vowelConsonantButtonWidth}px`} appearance="black" height="48px" label="Consonant" microLabel={`x${DailyBetTypeMultiplier[BetType.Consonant]}`} onPress={() => {
           setBetType(BetType.Consonant);
           context.ui.showForm(standardGuessForm)
         }} />

@@ -18,3 +18,22 @@ export const getSecondsUntilMidday = (): number => {
 
   return Math.floor((midday.getTime() - laTime.getTime()) / 1000);
 }
+
+export const getSecondsUntil30DaysFromNow = (): number => {
+  const now = new Date();
+  const laTime = new Date(now.toLocaleString('en-US', { timeZone: 'America/New_York' }));
+  let futureDate = new Date(laTime);
+  futureDate.setDate(futureDate.getDate() + 30);
+
+  return Math.floor((futureDate.getTime() - laTime.getTime()) / 1000);
+}
+
+export const getTodaysDate = (): string => {
+  const now = new Date();
+  const laTime = new Date(now.toLocaleString('en-US', { timeZone: 'America/New_York' }));
+  return laTime.toLocaleDateString('en-GB', {
+    day: '2-digit',
+    month: 'long',
+    year: 'numeric',
+  });
+}

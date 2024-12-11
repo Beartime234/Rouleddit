@@ -11,15 +11,15 @@ import { AppHeader } from '../../components/AppHeader.js';
 import { convertSecondsToTimeRemaining, getSecondsUntilMidday } from '../../utils/time.js';
 import { StyledText } from '../../components/StyledText.js';
 import { Shadow } from '../../components/Shadow.js';
+import { DailyPlaceBet } from '../../components/Pages/DailyPlaceBet.js';
 
-const menuButtonWidth = '200px';
-const menuButtonHeight = '62px';
+const menuButtonWidth = '150px';
+const menuButtonHeight = '48px';
 
 interface PinnedPostProps {
   postData: PostData;
   userData: UserData;
   username?: string;
-  activeFlairId?: string;
 }
 
 export const PinnedPost = (props: PinnedPostProps, context: Context): JSX.Element => {
@@ -28,29 +28,29 @@ export const PinnedPost = (props: PinnedPostProps, context: Context): JSX.Elemen
 
   const { data, loading } = useAsync(async () => {
     const userScore = await service.getUserScore(props.username);
-    const dailyGiftExpiration = await service.getDailyGiftExpiration(props.username!);
-    return { userScore, dailyGiftExpiration };
+    const hasClaimedDailyGift = await service.hasClaimedTheDailyGift(props.username!);
+    const hasPlacedDailyBet = await service.hasPlacedDailyBet(props.username!);
+    return { userScore, hasClaimedDailyGift, hasPlacedDailyBet };
   });
 
   const user = data?.userScore;
-  const dailyGift = data?.dailyGiftExpiration;
+  const dailyGift = data?.hasClaimedDailyGift;
+  const placedDailyBet = data?.hasPlacedDailyBet;
 
-  if (user === null || dailyGift === null || loading) {
+  if (user === null || dailyGift === null || placedDailyBet === null || loading) {
     return <LoadingState />;
   }
 
   const [score, setScore] = useState<number>(props.userData.score);
-  const [dailyGiftExpiration, setDailyGiftExpiration] = useState<number>(dailyGift ?? getSecondsUntilMidday());
+  const [hasPlacedDailyBet, setHasPlacedDailyBet] = useState<boolean>(placedDailyBet ?? true);
+  const [hasClaimedDailyGift, setHasClaimedDailyGift] = useState<boolean>(dailyGift ?? true);
+  const [countdown, setCountdown] = useState<number>(getSecondsUntilMidday());
 
-  const dailyGiftCoundown = useInterval(() => {
-    if (dailyGiftExpiration <= 0) {
-      dailyGiftCoundown.stop();
-      return;
-    }
-    setDailyGiftExpiration((prev) => prev - 1);
+  const countdownInterval = useInterval(() => {
+    setCountdown((prev) => prev - 1);
   }, 1000);
 
-  dailyGiftCoundown.start();
+  countdownInterval.start();
 
   const Menu = (
     <>
@@ -117,7 +117,15 @@ export const PinnedPost = (props: PinnedPostProps, context: Context): JSX.Elemen
           appearance="black"
           height={menuButtonHeight}
           onPress={() => setPage('placeBet')}
-          label="Play"
+          label="Standard"
+        />
+        <StyledButton
+          width={menuButtonWidth}
+          appearance={hasPlacedDailyBet ? 'disabled' : 'black'}
+          height={menuButtonHeight}
+          onPress={hasPlacedDailyBet ? undefined : () => setPage('placeDailyBet')}
+          label={hasPlacedDailyBet ? `Daily Drawn In` : 'Daily'}
+          microLabel={hasPlacedDailyBet ? convertSecondsToTimeRemaining(countdown) : undefined}
         />
         <StyledButton
           width={menuButtonWidth}
@@ -137,24 +145,24 @@ export const PinnedPost = (props: PinnedPostProps, context: Context): JSX.Elemen
     </vstack>
     <hstack height='100%' width='100%' alignment='bottom start' padding='small'>
     <spacer height='24px' width='24px'/>
-    {dailyGiftExpiration ? (
+    {hasClaimedDailyGift ? (
       <Shadow height='12px' width='12px'>
         <hstack backgroundColor='white'>
-          <StyledText>{`Next gift in ${convertSecondsToTimeRemaining(dailyGiftExpiration)}`}</StyledText>
+          <StyledText>{`Gift Available: ${convertSecondsToTimeRemaining(countdown)}`}</StyledText>
         </hstack>
       </Shadow>
       ) : (
         <StyledButton
-          width="100px"
-          height="32px"
+          width="150px"
+          height="48px"
           appearance="score"
           label="Redeem Daily Gift"
           onPress={async () => {
             const giftAmount = await service.giveDailyGift(props.username!);
             context.ui.showToast(`You got ${giftAmount}$`)
             setScore(score + giftAmount);
-            setDailyGiftExpiration(getSecondsUntilMidday());
-            dailyGiftCoundown.start();
+            setHasClaimedDailyGift(true);
+            countdownInterval.start();
           }}
         />
       )}
@@ -170,6 +178,7 @@ export const PinnedPost = (props: PinnedPostProps, context: Context): JSX.Elemen
     menu: Menu,
     rules: <HowToPlayPage onClose={onClose} />,
     placeBet: <PlaceBetStep setUserScore={setScore} userScore={score} {...props} onBack={onClose} />,
+    placeDailyBet: <DailyPlaceBet setHasPlacedDailyBet={setHasPlacedDailyBet} setUserScore={setScore} userScore={score} {...props} onBack={onClose} />,
     leaderboard: <LeaderboardPage onClose={onClose} username={props.username} />,
   };
 

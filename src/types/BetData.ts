@@ -8,16 +8,32 @@ export enum BetType {
 }
 
 export const BetTypeMultiplier: { [key in BetType]: number } = {
-    [BetType.SingleLetter]: 30,
-    [BetType.AtoI]: 6,
-    [BetType.JtoR]: 6,
-    [BetType.StoZ]: 6,
+    [BetType.SingleLetter]: 26,
+    [BetType.AtoI]: 5,
+    [BetType.JtoR]: 5,
+    [BetType.StoZ]: 5,
     [BetType.Vowel]: 4,
     [BetType.Consonant]: 1.5,
 }
 
+export const DailyBetTypeMultiplier: { [key in BetType]: number } = {
+    [BetType.SingleLetter]: 100,
+    [BetType.AtoI]: 20,
+    [BetType.JtoR]: 20,
+    [BetType.StoZ]: 20,
+    [BetType.Vowel]: 10,
+    [BetType.Consonant]: 3,
+}
+
 
 export type Bet = {
+    type: BetType;
+    letter?: string;
+    amount: number;
+}
+
+export type DailyBet = {
+    username: string;
     type: BetType;
     letter?: string;
     amount: number;

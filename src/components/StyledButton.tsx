@@ -30,6 +30,11 @@ const styles = {
     color: 'white',
     shadowColor: Settings.theme.red,
   },
+  disabled: {
+    backgroundColor: 'gray',
+    color: 'black',
+    shadowColor: 'black',
+  },
 };
 
 interface StyledButtonProps {
@@ -38,7 +43,7 @@ interface StyledButtonProps {
   label?: string;
   microLabel?: string;
   trailingIcon?: SupportedGlyphs;
-  appearance?: 'red' | 'black' | 'green' | 'score' | 'back';
+  appearance?: 'red' | 'black' | 'green' | 'score' | 'back' | 'disabled';
   width?: Devvit.Blocks.SizeString;
   height?: Devvit.Blocks.SizeString;
 }

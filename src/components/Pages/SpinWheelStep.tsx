@@ -55,7 +55,6 @@ export const SpinWheelStep = (
       }
     } else {
       if (!revealWinningPost) {
-        console.log('Stopping interval Subreddit');
         revealSubredditInterval.stop(); 
         revealPostInterval.start();
         setRevealWinningPost(true);
@@ -80,10 +79,12 @@ export const SpinWheelStep = (
     }
     setColorChangeCount((prev) => prev + 1);
     if (colorChangeCount >= 8) {
-      console.log('Stopping interval Post');
       revealPostInterval.stop();
       setFinishedRevealingPost(true);
       props.setUserScore(props.userScore + (isWin ? props.payoutData.payoutAmount : 0));
+      if (isWin) {
+        context.ui.showToast(`You won ${formatScore(payoutAmount)}$`);
+      }
     }
   }, 250);
 
@@ -91,9 +92,23 @@ export const SpinWheelStep = (
 
   return (
     <vstack width="100%" height="100%" alignment="center middle">
-      <spacer height="128px" />
+      <spacer height="42px" />
       <hstack width="100%" grow>
         <vstack gap="none" height="100%" grow alignment="center">
+            {!finishedRevealingPost ? (
+            <spacer height="80px" width='200px' />
+            ) : (
+            isWin ? (
+              <image url="winner_logo.png" imageWidth="200px" imageHeight="80px" description="Win Logo"/>
+            ) : (
+              <image url="badluck_logo.png" imageWidth="200px" imageHeight="80px" description="Lose Logo"/>
+            )
+            )}
+            {!finishedRevealingPost ? (
+            <spacer height="120px" width="120px" />
+            ) : (
+            <image url={`win_letters/pulsing_${winningLetter.toLowerCase()}.gif`} imageHeight='120px' imageWidth='120px' description="Letter Animation" />
+            )}
           <hstack border='thin' borderColor='black' backgroundColor="white" width="65%" padding='small' height="96px">
             <vstack grow>
             <hstack>
@@ -130,22 +145,7 @@ export const SpinWheelStep = (
             </hstack>
             </vstack>
           </hstack>
-          <spacer height="16px" />
-          {finishedRevealingPost && (
-            <StyledText size='large'>Winning Letter: {winningLetter}</StyledText>
-          )}
-          <spacer height="16px" />
-          {finishedRevealingPost && (
-            isWin ? (
-              <>
-              <StyledText size='large'>Congratulations!</StyledText>
-              <StyledText size='large'>You won {formatScore(payoutAmount)} points!</StyledText>
-              </>
-            ) : (
-              <StyledText size='large'>Better luck next time!</StyledText>
-            )
-          )}
-          <spacer height="16px" />
+          <spacer height="24px" />
           {finishedRevealingPost && (
             <hstack gap="small">
             <StyledButton width="100px" height="32px" appearance="back" label="Play Again" onPress={props.playAgain} />

@@ -3,6 +3,7 @@ import { LoadingState } from './components/LoadingState.js';
 import { Service } from './service/Service.js';
 import Settings from './settings.json';
 import { Router } from './posts/Router.js';
+import { getTodaysDate } from './utils/time.js';
 
 Devvit.configure({
   redditAPI: true,
@@ -80,6 +81,13 @@ Devvit.addMenuItem({
         text: 'Game',
         textColor: 'dark',
         backgroundColor: '#FF4500',
+      }),
+
+      await reddit.createPostFlairTemplate({
+        subredditName: community.name,
+        text: 'Daily Reveal',
+        textColor: 'dark',
+        backgroundColor: '#ADD8E6',
       }),
 
       // We want to create user flairs for the top 10 players
@@ -175,6 +183,54 @@ Devvit.addTrigger({
  * Test
 */
 Devvit.addMenuItem({
+  label: '[Test] Manually Perform Daily Post',
+  location: 'subreddit',
+  forUserType: 'moderator',
+  onPress: async (_event, context) => {
+    const { reddit } = context;
+    const community = await reddit.getCurrentSubreddit();
+    const todaysDate = getTodaysDate();
+    const service = new Service(context);
+    
+    const dailyBets = await service.getAllDailyBets();
+    console.log('there are', dailyBets.length, 'daily bets');
+    
+    const chosenPost = await service.getRandomPost();
+    console.log('chosen post', chosenPost);
+    
+    await service.payoutDailyWinners(chosenPost.winningLetter, dailyBets);
+    console.log('payout done');
+    
+    // Create the daily post
+    const post = await reddit.submitPost({
+      title: `Rouleddit: Daily - ${todaysDate}`, 
+      subredditName: community.name,
+      textFallback: {
+        text: `Daily Bet: ${todaysDate}. \n\nThe winning letter is: ${chosenPost.winningLetter} \n\nThe winning post is: ${chosenPost.postTitle} \n\nFrom The Subreddit: ${chosenPost.subreddit}`,
+      },
+      preview: <LoadingState />,
+    });
+    await service.saveDailyPost(post.id, chosenPost);
+    console.log('daily post created', post.title);
+
+
+    // Update the post with the daily reveal flair
+    const flairs = await reddit.getPostFlairTemplates(community.name);
+    const dailyRevealFlair = flairs.find((flair) => flair.text === 'Daily Reveal');
+    if (dailyRevealFlair) {
+      await reddit.setPostFlair({
+        subredditName: community.name,
+        postId: post.id,
+        flairTemplateId: dailyRevealFlair.id,
+      });
+    }
+
+    context.ui.showToast('Performed daily post');
+    context.ui.navigateTo(post.url)
+  }
+});
+
+Devvit.addMenuItem({
   label: '[Test] Manual Update Top Players Flairs',
   location: 'subreddit',
   forUserType: 'moderator',
@@ -204,6 +260,18 @@ Devvit.addMenuItem({
   onPress: async (_event, context) => {
     const jobs = await context.scheduler.listJobs();
     context.ui.showToast(`Scheduled Jobs: ${jobs.length} - ${jobs.map((job) => job.name).join(', ')}`);
+  }
+});
+
+Devvit.addMenuItem({
+  label: '[Test] Show User Daily Bet',
+  location: 'subreddit',
+  forUserType: 'moderator',
+  onPress: async (_event, context) => {
+    const service = new Service(context);
+    const user = await context.reddit.getCurrentUser();
+    const dailyBet = await service.hasPlacedDailyBet(user!.username);
+    context.ui.showToast(`User Daily Bet: ${JSON.stringify(dailyBet)}`);
   }
 });
 

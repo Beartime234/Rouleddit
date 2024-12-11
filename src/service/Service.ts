@@ -5,18 +5,19 @@ import {
   type RedisClient,
   type Scheduler,
 } from '@devvit/public-api';
-import type { PostData } from '../types/PostData.js';
+import type { DailyResultPostData, PostData } from '../types/PostData.js';
 import type { UserData } from '../types/UserData.js';
-import type { Bet, ChosenPostData, PayoutData } from '../types/BetData.js';
-import { BetTypeMultiplier, BetType } from '../types/BetData.js';
+import type { Bet, ChosenPostData, DailyBet, PayoutData } from '../types/BetData.js';
+import { BetTypeMultiplier, BetType, DailyBetTypeMultiplier } from '../types/BetData.js';
 import Settings from '../settings.json';
 import { ScoreBoardEntry } from '../types/ScoreBoardEntry.js';
 import { FlairData, Flairs, FlairsRankingArray } from '../types/FlairData.js';
-import { getSecondsUntilMidday } from '../utils/time.js';
+import { getSecondsUntil30DaysFromNow, getSecondsUntilMidday } from '../utils/time.js';
 
 
 const PINNED_POST_ID_KEY = 'pinned';
 export const PINNED_POST_TYPE = 'pinnedPost';
+export const DAILY_REVEAL_POST_TYPE = 'dailyReveal';
 const DEFAULT_POST_TYPE = PINNED_POST_TYPE;
 
 
@@ -114,6 +115,7 @@ export class Service {
   }
 
   //** Post Access */
+  
   #postDataKey(postId: string): string {
       return `post:${postId}`;
   }
@@ -135,6 +137,29 @@ export class Service {
       postId: data.postId,
       postType: data.postType,
     };
+  }
+
+  //* Daily Reveal Post
+  async getDailyRevealPost(postId: string): Promise<DailyResultPostData> {
+    const key = this.#postDataKey(postId);
+    const data = await this.redis.hGetAll(key);
+    if (data.postType !== DAILY_REVEAL_POST_TYPE) {
+      throw new Error('Post is not a daily reveal post');
+    }
+    return {
+      postId: data.postId,
+      postType: data.postType,
+      chosenPost: JSON.parse(data.chosenPost),
+    };
+  }
+  
+  async saveDailyPost(postId: string, chosenPost: ChosenPostData): Promise<void> {
+    await this.redis.hSet(this.#postDataKey(postId), {
+      postId: postId,
+      postType: DAILY_REVEAL_POST_TYPE,
+      chosenPost: JSON.stringify(chosenPost),
+    });
+    await this.redis.expire(this.#postDataKey(postId), getSecondsUntil30DaysFromNow());
   }
 
   //* Pinned Post
@@ -300,7 +325,7 @@ export class Service {
     return topPosts;
   }
 
-  //** Betting and Payout  **/
+  // Standard Bet
   async handleBet(bet: Bet, username: string, winningLetter: string): Promise<PayoutData> {
     const userScore = await this.getUserScore(username);
     if (userScore.score < bet.amount) {
@@ -319,6 +344,59 @@ export class Service {
     }
   }
 
+
+  // Daily Bet
+  #betKey = (username: string) => `user:${username}:bet`;
+  #activeBetsKey = 'activeBets';
+
+  async placeDailyBet(bet: DailyBet): Promise<void> {
+    const stringBetData = Object.fromEntries(
+      Object.entries(bet).map(([key, value]) => [key, String(value)])
+    );
+    await Promise.all([
+      this.removeFromUserScore(bet.username, bet.amount),
+      this.redis.hSet(this.#betKey(bet.username), stringBetData),
+      this.redis.zAdd(this.#activeBetsKey, { member: bet.username, score: bet.amount })
+    ]);
+  }
+
+  async getAllDailyBets(): Promise<DailyBet[]> {
+    const response = await this.redis.zRange(this.#activeBetsKey, 0, -1);
+    const bets = await Promise.all(response.map(async (key) => {
+      const data = await this.redis.hGetAll(this.#betKey(key.member));
+      return {
+        username: data.username,
+        type: data.type as BetType,
+        letter: data.letter,
+        amount: Number(data.amount),
+      };
+    }));
+
+    return bets;
+  }
+
+  async hasPlacedDailyBet(username: string): Promise<boolean> {
+    const key = this.#betKey(username);
+    const betData = await this.redis.hGetAll(key);
+    return Object.keys(betData).length > 0;
+  }
+
+  async payoutDailyWinners(winningLetter: string, bets: DailyBet[]): Promise<void> {
+    const winningBets = bets.filter((bet) => this.isWin(bet.type, winningLetter, bet.letter));
+    
+    await Promise.all(winningBets.map((bet: DailyBet) => {
+      const payoutAmount = bet.amount * DailyBetTypeMultiplier[bet.type];
+      return this.addToUserScore(bet.username, payoutAmount);
+    }));
+
+    // Clear all bets
+    await Promise.all([
+      this.redis.del(this.#activeBetsKey),
+      ...bets.map((bet) => this.redis.del(this.#betKey(bet.username)))
+    ]);
+  }
+
+  // Shared Bet
   private isWin(type: BetType, winningLetter: string, letter?: string): boolean {
     switch (type) {
       case BetType.SingleLetter:
@@ -342,12 +420,6 @@ export class Service {
   // Daily Gift
   #dailyGiftKey = (username: string) => `dailyGift:${username}`;
 
-  async getDailyGiftExpiration(username: string): Promise<number | null> {
-    const key = this.#dailyGiftKey(username);
-    const expiration = await this.redis.expireTime(key);
-    return expiration === -1 ? null : expiration;
-  }
-
   async giveDailyGift(username: string): Promise<number> {
     if (await this.hasClaimedTheDailyGift(username)) {
       throw new Error('User has already claimed the daily gift');
@@ -363,10 +435,9 @@ export class Service {
     await this.redis.del(key);
   }
 
-  private async hasClaimedTheDailyGift(username: string): Promise<boolean> {
+  async hasClaimedTheDailyGift(username: string): Promise<boolean> {
     const key = this.#dailyGiftKey(username);
     const value = await this.redis.get(key);
-    const expiration = await this.redis.expireTime(key);
     return value !== undefined;
   }
 
