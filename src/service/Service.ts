@@ -12,7 +12,7 @@ import { BetTypeMultiplier, BetType, DailyBetTypeMultiplier } from '../types/Bet
 import Settings from '../settings.json';
 import { ScoreBoardEntry } from '../types/ScoreBoardEntry.js';
 import { FlairData, Flairs, FlairsRankingArray } from '../types/FlairData.js';
-import { getSecondsUntil30DaysFromNow, getSecondsUntilMidday } from '../utils/time.js';
+import { getSecondsUntil30DaysFromNow, getSecondsUntilMidday, getTodaysDate } from '../utils/datetime.js';
 
 
 const PINNED_POST_ID_KEY = 'pinned';
@@ -150,6 +150,7 @@ export class Service {
       postId: data.postId,
       postType: data.postType,
       chosenPost: JSON.parse(data.chosenPost),
+      date: data.date,
     };
   }
   
@@ -158,6 +159,7 @@ export class Service {
       postId: postId,
       postType: DAILY_REVEAL_POST_TYPE,
       chosenPost: JSON.stringify(chosenPost),
+      date: getTodaysDate(),
     });
     await this.redis.expire(this.#postDataKey(postId), getSecondsUntil30DaysFromNow());
   }
@@ -207,14 +209,20 @@ export class Service {
     rank: number;
     score: number;
   }> {
-    const defaultValue = { rank: -1, score: 100 };
+    const defaultValue = { rank: -1, score: 0 };
     if (!username) return defaultValue;
     try {
       const [rank, score] = await Promise.all([
         this.redis.zRank(this.#scoreKey, username),
-        // TODO: Remove .zScore when .zRank supports the WITHSCORE option
         this.redis.zScore(this.#scoreKey, username),
       ]);
+      if (score === undefined) {
+        await this.addNewPlayer(username);
+        return {  
+          rank: -1,
+          score: 100,
+        }
+      }
       return {
         rank: rank === undefined ? -1 : rank,
         score: score === undefined  ? 0 : score,
@@ -236,7 +244,11 @@ export class Service {
     console.log('Removing', amount, 'from', username);
     await this.redis.zIncrBy(this.#scoreKey, username, -amount);
   }
-
+  
+  async addNewPlayer(username: string): Promise<void> {
+    const initialScore = 100;
+    await this.addToUserScore(username, initialScore);
+  }
 
   //** User Access */
   readonly #userDataKey = (username: string) => `users:${username}`;
@@ -258,6 +270,14 @@ export class Service {
       score: user.score,
     };
     return parsedData;
+  }
+
+  // ** Reset Player
+  async resetPlayer(username: string): Promise<void> {
+    await this.redis.del(this.#userDataKey(username));
+    await this.redis.zRem(this.#scoreKey, [username]);
+    await this.resetDailyGift(username);
+
   }
   
   //** Post Picking */

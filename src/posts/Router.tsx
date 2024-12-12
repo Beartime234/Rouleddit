@@ -70,6 +70,7 @@ export const Router: Devvit.CustomPostComponent = (context: Context) => {
     [DAILY_REVEAL_POST_TYPE]: (
       <DailyResultPost
         chosenPost={(postData as DailyResultPostData).chosenPost}
+        date={(postData as DailyResultPostData).date}
         username={username}
       />
     ),

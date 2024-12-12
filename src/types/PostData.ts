@@ -8,4 +8,5 @@ export type PostData = {
 
 export type DailyResultPostData = PostData & {
   chosenPost: ChosenPostData;
+  date: string;
 };

@@ -3,7 +3,7 @@ import { LoadingState } from './components/LoadingState.js';
 import { Service } from './service/Service.js';
 import Settings from './settings.json';
 import { Router } from './posts/Router.js';
-import { getTodaysDate } from './utils/time.js';
+import { getTodaysDate } from './utils/datetime.js';
 
 Devvit.configure({
   redditAPI: true,
@@ -85,7 +85,7 @@ Devvit.addMenuItem({
 
       await reddit.createPostFlairTemplate({
         subredditName: community.name,
-        text: 'Daily Reveal',
+        text: 'Daily Post',
         textColor: 'dark',
         backgroundColor: '#ADD8E6',
       }),
@@ -152,6 +152,7 @@ Devvit.addMenuItem({
  * Scheduled
  */
 const UPDATE_TOP_PLAYERS_FLAIRS = 'updateTopPlayersFlairs';
+const POST_DAILY = 'postDaily';
 
 Devvit.addSchedulerJob({
   name: UPDATE_TOP_PLAYERS_FLAIRS,
@@ -165,10 +166,13 @@ Devvit.addTrigger({
   event: 'AppInstall',
   onEvent: async (_, context) => {
     try {
-      // Run the job every 15 minutes
-      // TODO we should save the job id to be able to cancel it
       await context.scheduler.runJob({
-        cron: '*/15 * * * *',
+        cron: '0 17 * * *', // Midday America/New_York
+        name: POST_DAILY,
+        data: {},
+      });
+      await context.scheduler.runJob({
+        cron: '*/15 * * * *',  // Every 15 minutes
         name: UPDATE_TOP_PLAYERS_FLAIRS,
         data: {},
       });
@@ -187,46 +191,7 @@ Devvit.addMenuItem({
   location: 'subreddit',
   forUserType: 'moderator',
   onPress: async (_event, context) => {
-    const { reddit } = context;
-    const community = await reddit.getCurrentSubreddit();
-    const todaysDate = getTodaysDate();
-    const service = new Service(context);
-    
-    const dailyBets = await service.getAllDailyBets();
-    console.log('there are', dailyBets.length, 'daily bets');
-    
-    const chosenPost = await service.getRandomPost();
-    console.log('chosen post', chosenPost);
-    
-    await service.payoutDailyWinners(chosenPost.winningLetter, dailyBets);
-    console.log('payout done');
-    
-    // Create the daily post
-    const post = await reddit.submitPost({
-      title: `Rouleddit: Daily - ${todaysDate}`, 
-      subredditName: community.name,
-      textFallback: {
-        text: `Daily Bet: ${todaysDate}. \n\nThe winning letter is: ${chosenPost.winningLetter} \n\nThe winning post is: ${chosenPost.postTitle} \n\nFrom The Subreddit: ${chosenPost.subreddit}`,
-      },
-      preview: <LoadingState />,
-    });
-    await service.saveDailyPost(post.id, chosenPost);
-    console.log('daily post created', post.title);
-
-
-    // Update the post with the daily reveal flair
-    const flairs = await reddit.getPostFlairTemplates(community.name);
-    const dailyRevealFlair = flairs.find((flair) => flair.text === 'Daily Reveal');
-    if (dailyRevealFlair) {
-      await reddit.setPostFlair({
-        subredditName: community.name,
-        postId: post.id,
-        flairTemplateId: dailyRevealFlair.id,
-      });
-    }
-
-    context.ui.showToast('Performed daily post');
-    context.ui.navigateTo(post.url)
+    await executeDailyPost(context);
   }
 });
 
@@ -254,28 +219,6 @@ Devvit.addMenuItem({
 });
 
 Devvit.addMenuItem({
-  label: '[Test] Show Scheduled Jobs',
-  location: 'subreddit',
-  forUserType: 'moderator',
-  onPress: async (_event, context) => {
-    const jobs = await context.scheduler.listJobs();
-    context.ui.showToast(`Scheduled Jobs: ${jobs.length} - ${jobs.map((job) => job.name).join(', ')}`);
-  }
-});
-
-Devvit.addMenuItem({
-  label: '[Test] Show User Daily Bet',
-  location: 'subreddit',
-  forUserType: 'moderator',
-  onPress: async (_event, context) => {
-    const service = new Service(context);
-    const user = await context.reddit.getCurrentUser();
-    const dailyBet = await service.hasPlacedDailyBet(user!.username);
-    context.ui.showToast(`User Daily Bet: ${JSON.stringify(dailyBet)}`);
-  }
-});
-
-Devvit.addMenuItem({
   label: '[Test] Give Yourself Money',
   location: 'subreddit',
   forUserType: 'moderator',
@@ -287,5 +230,87 @@ Devvit.addMenuItem({
   }
 });
 
+Devvit.addMenuItem({
+  label: '[Test] Show Scheduled Jobs',
+  location: 'subreddit',
+  forUserType: 'moderator',
+  onPress: async (_event, context) => {
+    const jobs = await context.scheduler.listJobs();
+    context.ui.showToast(`Scheduled Jobs: ${jobs.length} - ${jobs.map((job) => job.name).join(', ')}`);
+  }
+});
+
+Devvit.addMenuItem({
+  label: '[Test] Reset Player',
+  location: 'subreddit',
+  forUserType: 'moderator',
+  onPress: async (_event, context) => {
+    const service = new Service(context);
+    const user = await context.reddit.getCurrentUser();
+    await service.resetPlayer(user!.username);
+    context.ui.showToast('Reset player');
+  }
+});
+
 
 export default Devvit;
+
+
+/**
+ * Executes the daily post routine for the subreddit.
+ *
+ * This function performs the following steps:
+ * 1. Retrieves the current subreddit.
+ * 2. Gets today's date.
+ * 3. Initializes the service with the provided context.
+ * 4. Retrieves all daily bets and logs the count.
+ * 5. Selects a random post and logs the chosen post.
+ * 6. Pays out the daily winners based on the chosen post's winning letter.
+ * 7. Creates a daily post in the subreddit with the winning details.
+ * 8. Saves the daily post information.
+ * 9. Updates the post with the "Daily Reveal" flair if available.
+ * 10. Shows a toast notification and navigates to the created post.
+ *
+ * @param {Devvit.Context} context - The context object containing the Reddit API and UI utilities.
+ * @returns {Promise<void>} A promise that resolves when the daily post routine is complete.
+ */
+async function executeDailyPost(context: Devvit.Context) {
+  const { reddit } = context;
+  const community = await reddit.getCurrentSubreddit();
+  const todaysDate = getTodaysDate();
+  const service = new Service(context);
+
+  const dailyBets = await service.getAllDailyBets();
+  console.log('there are', dailyBets.length, 'daily bets');
+
+  const chosenPost = await service.getRandomPost();
+  console.log('chosen post', chosenPost);
+
+  await service.payoutDailyWinners(chosenPost.winningLetter, dailyBets);
+  console.log('payout done');
+
+  const post = await reddit.submitPost({
+    title: `Rouleddit: Daily - ${todaysDate}`,
+    subredditName: community.name,
+    textFallback: {
+      text: `Daily Bet: ${todaysDate}. \n\nThe winning letter is: ${chosenPost.winningLetter} \n\nThe winning post is: ${chosenPost.postTitle} \n\nFrom The Subreddit: ${chosenPost.subreddit}`,
+    },
+    preview: <LoadingState />,
+  });
+  await service.saveDailyPost(post.id, chosenPost);
+  console.log('daily post created', post.title);
+
+
+  const flairs = await reddit.getPostFlairTemplates(community.name);
+  const dailyRevealFlair = flairs.find((flair) => flair.text === 'Daily Post');
+  if (dailyRevealFlair) {
+    await reddit.setPostFlair({
+      subredditName: community.name,
+      postId: post.id,
+      flairTemplateId: dailyRevealFlair.id,
+    });
+  }
+
+  context.ui.showToast('Performed daily post');
+  context.ui.navigateTo(post.url);
+}

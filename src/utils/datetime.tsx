@@ -1,3 +1,5 @@
+const tz = 'America/New_York';
+
 export const convertSecondsToTimeRemaining = (seconds: number): string => {
   const hours = Math.floor(seconds / 3600);
   const minutes = Math.floor((seconds % 3600) / 60);
@@ -8,7 +10,7 @@ export const convertSecondsToTimeRemaining = (seconds: number): string => {
 
 export const getSecondsUntilMidday = (): number => {
   const now = new Date();
-  const laTime = new Date(now.toLocaleString('en-US', { timeZone: 'America/New_York' }));
+  const laTime = new Date(now.toLocaleString('en-US', { timeZone: tz }));
   let midday = new Date(laTime);
   midday.setHours(12, 0, 0, 0);
   
@@ -21,7 +23,7 @@ export const getSecondsUntilMidday = (): number => {
 
 export const getSecondsUntil30DaysFromNow = (): number => {
   const now = new Date();
-  const laTime = new Date(now.toLocaleString('en-US', { timeZone: 'America/New_York' }));
+  const laTime = new Date(now.toLocaleString('en-US', { timeZone: tz }));
   let futureDate = new Date(laTime);
   futureDate.setDate(futureDate.getDate() + 30);
 
@@ -30,7 +32,7 @@ export const getSecondsUntil30DaysFromNow = (): number => {
 
 export const getTodaysDate = (): string => {
   const now = new Date();
-  const laTime = new Date(now.toLocaleString('en-US', { timeZone: 'America/New_York' }));
+  const laTime = new Date(now.toLocaleString('en-US', { timeZone: tz }));
   return laTime.toLocaleDateString('en-GB', {
     day: '2-digit',
     month: 'long',

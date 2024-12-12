@@ -150,7 +150,7 @@ export const PlaceBetStep = (
     <>
     <AppHeader userScore={score} onBack={props.onBack} />
     <vstack width="100%" height="100%" alignment="center middle">
-      <spacer height="92px" />
+      <spacer height="142px" />
       <image url="placebet_logo.png" imageWidth="200px" imageHeight="50px" description="Menu Logo"/>
       <spacer height="24px" />
       {/* Bet Buttons */}
