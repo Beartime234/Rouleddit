@@ -1,12 +1,9 @@
 import { Devvit, useForm, Context, useState, useAsync } from '@devvit/public-api';
-import { StyledText } from '../StyledText.js';
 import { StyledButton } from '../StyledButton.js';
 import { AppHeader } from '../AppHeader.js';
 import { Service } from '../../service/Service.js';
-import { Bet, BetType, BetTypeMultiplier, DailyBet, DailyBetTypeMultiplier } from '../../types/BetData.js';
+import { BetType, DailyBet, DailyBetTypeMultiplier } from '../../types/BetData.js';
 import { UserData } from '../../types/UserData.js';
-import { SpinWheelStep } from './SpinWheelStep.js';
-import { ChosenPostData, PayoutData } from '../../types/BetData.js';
 
 interface DailyPlaceBetProps {
   username?: string;
@@ -127,8 +124,8 @@ export const DailyPlaceBet = (
     <AppHeader userScore={score} onBack={props.onBack} />
     <vstack width="100%" height="100%" alignment="center middle">
       <spacer height="128px" />
-      <image url="placebet_logo.png" imageWidth="200px" imageHeight="50px" description="Menu Logo"/>
-      <spacer height="24px" />
+      <image url="dailybet_logo.png" imageWidth="250px" imageHeight="80px" description="Menu Logo"/>
+      <spacer height="12px" />
       {/* Bet Buttons */}
       <hstack width="100%" grow>
       <spacer width="24px" />
