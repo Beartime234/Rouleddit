@@ -19,7 +19,7 @@ interface DailyPlaceBetProps {
 
 const isValidBet = (bet: number, score: number, context: Context): boolean => {
   if (bet > score) {
-    context.ui.showToast('Not enough money');
+    context.ui.showToast('Not enough points');
     return false;
   }
   if (bet % 1 !== 0) {

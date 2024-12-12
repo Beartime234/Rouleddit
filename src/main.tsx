@@ -219,7 +219,7 @@ Devvit.addMenuItem({
 });
 
 Devvit.addMenuItem({
-  label: '[Test] Give Yourself Money',
+  label: '[Test] Give Yourself Points',
   location: 'subreddit',
   forUserType: 'moderator',
   onPress: async (_event, context) => {

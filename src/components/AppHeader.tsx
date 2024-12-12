@@ -28,7 +28,7 @@ export const AppHeader = (props: AppHeaderProps): JSX.Element => {
         ) || <spacer width="24px" />} 
         <spacer grow />
         <vstack alignment="middle">
-        <StyledButton width="100px" height="32px" appearance="score" label={`${formatScore(score)}$`} />
+        <StyledButton width="100px" height="32px" appearance="score" label={`${formatScore(score)}`} />
         </vstack>
         <spacer width="24px" />
       </hstack>

@@ -26,29 +26,29 @@ export const HowToPlayPage = (props: HowToPlayProps, _context: Context): JSX.Ele
     <hstack grow>
       <spacer width="24px" />
       <zstack alignment="start top" grow>
-        {/* Shadow */}
         <vstack width="100%" height="100%">
           <spacer height="4px" />
           <hstack grow>
             <spacer width="4px" />
-            <hstack grow backgroundColor='red' />
+            <hstack grow backgroundColor={Settings.theme.red} />
           </hstack>
         </vstack>
 
-        {/* Card */}
         <vstack width="100%" height="100%">
           <hstack grow>
             <vstack grow backgroundColor="white">
               <spacer height="4px" />
               <vstack grow alignment="center middle">
-                <StyledText>123</StyledText>
+                <StyledText size='large'>A post from a top subreddit will be chosen at random.</StyledText>
                 <spacer height="4px" />
-                <StyledText>123</StyledText>
-                <spacer height="16px" />
-                <StyledText>If you run out of money</StyledText>
-                <spacer height="4px" />
-                <StyledText color={Settings.theme.red}>will be first in the post title</StyledText>
-              </vstack>
+                <StyledText size='large'>Place your bets on which letter will be first in the post title!</StyledText>
+                <spacer height="48px" />
+                <StyledText size='xlarge' color={Settings.theme.red}>-Standard Mode-</StyledText>
+                <StyledText size='large' color={Settings.theme.black}>Endless Gameplay. Bet as often as you like, provided you have the points to spend.</StyledText>
+                <spacer height="24px" />
+                <StyledText size='xlarge' color={Settings.theme.red}>-Daily Mode-</StyledText>
+                <StyledText size='large' color={Settings.theme.black}>Place your daily bet for a chance to win extra points. Resets midday GMT-5.</StyledText>              
+                </vstack>
               <spacer height="4px" />
             </vstack>
             <spacer width="4px" />
@@ -58,7 +58,6 @@ export const HowToPlayPage = (props: HowToPlayProps, _context: Context): JSX.Ele
       </zstack>
       <spacer width="20px" />
     </hstack>
-
     <spacer height="20px" />
   </vstack>
 );

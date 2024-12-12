@@ -17,7 +17,6 @@ export const LeaderboardRow = (props: LeaderboardRowProps): JSX.Element => {
 
   return (
     <zstack height={height} onPress={onPress}>
-      {/* Name and rank */}
       <hstack width="100%" height="100%" alignment="start middle">
         <spacer width="12px" />
         <StyledText>{`${rank}.`}</StyledText>
@@ -25,10 +24,7 @@ export const LeaderboardRow = (props: LeaderboardRowProps): JSX.Element => {
         <StyledText>{name}</StyledText>
       </hstack>
 
-      {/* Score */}
-      {/* May overlap especially long names on narrow screens */}
       <hstack width="100%" height="100%" alignment="end middle">
-        {/* Background to cover long names */}
         <hstack backgroundColor="white" height="100%" alignment="middle">
           <spacer width="8px" />
           <StyledText>{formatScore(score)}</StyledText>

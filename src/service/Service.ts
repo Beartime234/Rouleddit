@@ -245,7 +245,7 @@ export class Service {
     await this.redis.zIncrBy(this.#scoreKey, username, -amount);
   }
   
-  async addNewPlayer(username: string): Promise<void> {
+  private async addNewPlayer(username: string): Promise<void> {
     const initialScore = 100;
     await this.addToUserScore(username, initialScore);
   }

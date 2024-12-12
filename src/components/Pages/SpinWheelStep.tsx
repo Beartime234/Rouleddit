@@ -83,7 +83,7 @@ export const SpinWheelStep = (
       setFinishedRevealingPost(true);
       props.setUserScore(props.userScore + (isWin ? props.payoutData.payoutAmount : 0));
       if (isWin) {
-        context.ui.showToast(`You won ${formatScore(payoutAmount)}$`);
+        context.ui.showToast(`You won ${formatScore(payoutAmount)} points`);
       }
     }
   }, 250);
