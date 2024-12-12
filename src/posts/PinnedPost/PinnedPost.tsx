@@ -108,7 +108,7 @@ export const PinnedPost = (props: PinnedPostProps, context: Context): JSX.Elemen
           label="Redeem Daily Gift"
           onPress={async () => {
             const giftAmount = await service.giveDailyGift(props.username!);
-            context.ui.showToast(`You got ${giftAmount}$`)
+            context.ui.showToast(`You got ${giftAmount} points`)
             setScore(score + giftAmount);
             setHasClaimedDailyGift(true);
             countdownInterval.start();
