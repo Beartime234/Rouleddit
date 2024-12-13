@@ -50,6 +50,20 @@ export const PinnedPost = (props: PinnedPostProps, context: Context): JSX.Elemen
     setCountdown((prev) => prev - 1);
   }, 1000);
 
+  const refreshData = async () => {
+    const userScore = await service.getUserScore(props.username);
+    const hasClaimedDailyGift = await service.hasClaimedTheDailyGift(props.username!);
+    const hasPlacedDailyBet = await service.hasPlacedDailyBet(props.username!);
+    setScore(userScore.score);
+    setHasClaimedDailyGift(hasClaimedDailyGift);
+    setHasPlacedDailyBet(hasPlacedDailyBet);
+  }
+
+  const refreshInterval = useInterval(() => {
+    refreshData();
+  }, 60000);
+
+  refreshInterval.start();
   countdownInterval.start();
 
   const Menu = (
@@ -58,7 +72,7 @@ export const PinnedPost = (props: PinnedPostProps, context: Context): JSX.Elemen
     <vstack width="100%" height="100%" alignment="center middle">
 
       <image url="menu_logo.png" imageWidth="250px" imageHeight="80px" description="Menu Logo"/>
-      <spacer height={"32px"} />
+      <spacer size='medium' />
 
       <vstack alignment="center middle" gap="small">
         <StyledButton
@@ -93,7 +107,7 @@ export const PinnedPost = (props: PinnedPostProps, context: Context): JSX.Elemen
       </vstack>
     </vstack>
     <hstack height='100%' width='100%' alignment='bottom start' padding='small'>
-    <spacer height='24px' width='32px'/>
+    <spacer size='small'/>
     {hasClaimedDailyGift ? (
         <>
         <image url="giftbox_open.png" imageWidth="100px" imageHeight="100px" description="Gift Box Open"/>

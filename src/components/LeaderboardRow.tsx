@@ -18,19 +18,19 @@ export const LeaderboardRow = (props: LeaderboardRowProps): JSX.Element => {
   return (
     <zstack height={height} onPress={onPress}>
       <hstack width="100%" height="100%" alignment="start middle">
-        <spacer width="12px" />
+        <spacer width='24px' />
         <StyledText>{`${rank}.`}</StyledText>
-        <spacer width="8px" />
+        <spacer width='8px' />
         <StyledText>{name}</StyledText>
       </hstack>
 
       <hstack width="100%" height="100%" alignment="end middle">
         <hstack backgroundColor="white" height="100%" alignment="middle">
-          <spacer width="8px" />
+          <spacer width='8px' />
           <StyledText>{formatScore(score)}</StyledText>
-          <spacer width="8px" />
+          <spacer width='8px' />
           <text>{props.emoji}</text>
-          <spacer width="12px" />
+          <spacer width='52px' />
         </hstack>
       </hstack>
     </zstack>

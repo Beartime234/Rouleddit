@@ -7,10 +7,11 @@ interface StyledTextProps {
   size?: 'xsmall' | 'small' | 'medium' | 'large'  | 'xlarge' | 'xxlarge';
   color?: string;
   onPress?: () => void;
+  overflow?: 'clip' | 'ellipsis';
 }
 
 export function StyledText(props: StyledTextProps): JSX.Element {
-  const { children, size = 'large', color = 'black' } = props;
+  const { children, size = 'large', color = 'black', overflow = 'ellipsis' } = props;
 
   return (
     <text
@@ -18,7 +19,7 @@ export function StyledText(props: StyledTextProps): JSX.Element {
       color={color}
       size={size}
       onPress={props.onPress}
-      overflow='ellipsis'
+      overflow={overflow}
     >
       {children}
     </text>
