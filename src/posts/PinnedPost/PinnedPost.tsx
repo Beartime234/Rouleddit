@@ -93,19 +93,13 @@ export const PinnedPost = (props: PinnedPostProps, context: Context): JSX.Elemen
       </vstack>
     </vstack>
     <hstack height='100%' width='100%' alignment='bottom start' padding='small'>
-    <spacer height='24px' width='24px'/>
+    <spacer height='24px' width='32px'/>
     {hasClaimedDailyGift ? (
-      <Shadow height='12px' width='12px'>
-        <hstack backgroundColor='white'>
-          <StyledText>{`Gift Available: ${convertSecondsToTimeRemaining(countdown)}`}</StyledText>
-        </hstack>
-      </Shadow>
+        <>
+        <image url="giftbox_open.png" imageWidth="100px" imageHeight="100px" description="Gift Box Open"/>
+        </>
       ) : (
-        <StyledButton
-          width="150px"
-          height="48px"
-          appearance="score"
-          label="Redeem Daily Gift"
+        <image url="giftbox_closed.png" imageWidth="100px" imageHeight="100px" description='Gift Box Closed'
           onPress={async () => {
             const giftAmount = await service.giveDailyGift(props.username!);
             context.ui.showToast(`You got ${giftAmount} points`)

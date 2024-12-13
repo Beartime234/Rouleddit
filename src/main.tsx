@@ -1,4 +1,4 @@
-import { Context, Devvit, Post, RedditAPIClient } from '@devvit/public-api';
+import { Devvit } from '@devvit/public-api';
 import { LoadingState } from './components/LoadingState.js';
 import { Service } from './service/Service.js';
 import Settings from './settings.json';
@@ -159,6 +159,14 @@ Devvit.addSchedulerJob({
   onRun: async (_, context) => {
     const service = new Service(context);
     await service.updateTopPlayerFlairs()
+  },
+});
+
+Devvit.addSchedulerJob({
+  name: POST_DAILY,
+  onRun: async (_, context) => {
+    // @ts-ignore
+    await executeDailyPost(context); 
   },
 });
 

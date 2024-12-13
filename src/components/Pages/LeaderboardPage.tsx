@@ -101,12 +101,11 @@ export const LeaderboardPage = (props: LeaderboardPageProps, context: Context): 
     }
   });
 
-  // Return early view if data is loading
   if (loading || data === null) {
     return (
       <Layout onClose={props.onClose}>
         <vstack grow alignment="center middle">
-          <StyledText color='black'>Loading ...</StyledText>
+          <image url="spinner.gif" imageWidth="100px" imageHeight="100px" description="Loading" />
         </vstack>
       </Layout>
     );

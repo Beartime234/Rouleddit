@@ -9,19 +9,19 @@ export enum BetType {
 
 export const BetTypeMultiplier: { [key in BetType]: number } = {
     [BetType.SingleLetter]: 26,
-    [BetType.AtoI]: 5,
-    [BetType.JtoR]: 5,
-    [BetType.StoZ]: 5,
-    [BetType.Vowel]: 4,
-    [BetType.Consonant]: 1.5,
+    [BetType.AtoI]: 8,
+    [BetType.JtoR]: 8,
+    [BetType.StoZ]: 8,
+    [BetType.Vowel]: 5,
+    [BetType.Consonant]: 1.25,
 }
 
 export const DailyBetTypeMultiplier: { [key in BetType]: number } = {
     [BetType.SingleLetter]: 100,
-    [BetType.AtoI]: 20,
-    [BetType.JtoR]: 20,
-    [BetType.StoZ]: 20,
-    [BetType.Vowel]: 10,
+    [BetType.AtoI]: 25,
+    [BetType.JtoR]: 25,
+    [BetType.StoZ]: 25,
+    [BetType.Vowel]: 15,
     [BetType.Consonant]: 3,
 }
 
