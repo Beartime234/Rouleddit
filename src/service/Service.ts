@@ -223,6 +223,7 @@ export class Service {
           score: 100,
         }
       }
+      console.log('User', username, 'has rank', rank, 'and score', score);
       return {
         rank: rank === undefined ? -1 : rank,
         score: score === undefined  ? 0 : score,

@@ -111,12 +111,12 @@ export const LeaderboardPage = (props: LeaderboardPageProps, context: Context): 
     );
   }
 
-  const isUserInTheTop = data.user.rank < rowCount;
+  const isUserInTheTop = false;  // TODO temp fix until we have zRevRank
   const rowHeight = isUserInTheTop
     ? `${(availableHeight - dividerHeight) / rowCount}px`
     : `${availableHeight / rowCount}px`;
 
-  const numberOfScoresToInclude = !loading && data?.user && isUserInTheTop ? 10 : 9;
+  const numberOfScoresToInclude = !loading && data?.user && isUserInTheTop ? 10 : 10; // TODO temp fix until we have zRevRank
 
   const leaderboardRows = data.leaderboard.map((row, index) => {
     if (index >= numberOfScoresToInclude) {
@@ -161,8 +161,6 @@ export const LeaderboardPage = (props: LeaderboardPageProps, context: Context): 
   return (
     <Layout onClose={props.onClose}>
       {leaderboardRows}
-      {/* Append the user to the bottom if they are out of view */}
-      {!isUserInTheTop && footer}
     </Layout>
   );
 };
