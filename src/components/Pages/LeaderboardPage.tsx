@@ -72,8 +72,8 @@ interface LeaderboardPageProps {
 }
 
 const rowCount = 10;
-const availableHeight = 418;
-const dividerHeight = 10;
+const availableHeight = 370;
+const dividerHeight = 8;
 
 export const LeaderboardPage = (props: LeaderboardPageProps, context: Context): JSX.Element => {
   const service = new Service(context);
